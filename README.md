@@ -110,7 +110,36 @@ Presenter - презентер содержит основную логику п
 
 Каталог на главной:
 
-constructor(Массив товаров: товар[], выбранная карточка: товар): 
+export class Product {
+
+  private products:IProduct[];
+  private selectedProduct: IProduct | null
+
+  constructor(products :IProduct[] = [], selectedProduct?: IProduct) {
+    this.products = products;
+    this.selectedProduct = selectedProduct ?? null
+  }
+
+  saveProducts(products:IProduct[]): void {
+    this.products = products
+  }
+
+  getProducts():IProduct[] {
+    return this.products
+  }
+
+  getOneProduct(id: string): IProduct | undefined {
+    return this.products.find(product => product.id === id)
+  }
+
+   saveProductForView(product:IProduct): void {
+    this.selectedProduct = product
+  }
+
+   getProductForView():IProduct | null {
+    return this.selectedProduct
+  }
+}
 
 Методы:
 1) Список товаров,
@@ -120,6 +149,58 @@ constructor(Массив товаров: товар[], выбранная кар
 
 Корзина с товарами:
 	Массив товаров
+
+	import { IProduct } from "../../types";
+
+export class Basket {
+
+  private productsBasket : IProduct[];
+  
+  constructor(productsBasket: IProduct[] = []) {
+  
+    this.productsBasket = productsBasket
+  }
+
+  getBasketProducts():IProduct[] {
+    return this.productsBasket
+  }
+
+  addToBasketProducts(product: IProduct): void {
+    this.productsBasket.push(product)
+  }
+
+  deleteFromBasketProducts(product: IProduct): void {
+    const index = this.productsBasket.indexOf(product)
+    this.productsBasket.splice(index,1)
+  }
+
+  deleteEverythingFromBasket(): void {
+    this.productsBasket.length = 0
+  }
+
+  sumOfBasketProduct(): number  {
+    return this.productsBasket.reduce((sum, el) => {
+      sum += el.price ?? 0
+      return sum
+    }, 0)
+  }
+  quantityBasketProducts(): number {
+    return this.productsBasket.length
+  }
+   
+   getOneBasketProduct(id: string): IProduct | undefined {
+    return this.productsBasket.find(product => product.id === id)
+  }
+  
+   hasProduct(id: string): boolean {
+    return this.productsBasket.some(product => product.id === id);
+  }
+
+
+
+
+}
+
 
 Методы: 
 1) Добавлять товар
@@ -136,6 +217,68 @@ constructor(Массив товаров: товар[], выбранная кар
 	 Email
 	 Телефон
  }
+ export class Buyer {
+  private payment: TPayment;
+  private email: string;
+  private phone: string;
+  private address: string;
+
+  constructor(buyer: IBuyer) {
+    this.payment = buyer.payment;
+    this.email = buyer.email;
+    this.phone = buyer.phone;
+    this.address = buyer.address;
+  }
+
+  savePayment(payment: TPayment) {
+    this.payment = payment;
+  }
+  saveEmail(email: string) {
+    this.email = email;
+  }
+  savePhone(phone: string) {
+    this.phone = phone;
+  }
+  saveAddress(address: string) {
+    this.address = address;
+  }
+  getInfoAboutBuyer(): IBuyer {
+    return {
+      payment: this.payment,
+      email: this.email,
+      phone: this.phone,
+      address: this.address,
+    };
+  }
+
+  deleteBuyerInfo(): void {
+    this.payment = "";
+    this.email = "";
+    this.phone = "";
+    this.address = "";
+  }
+
+  validatePayment(): string | null {
+    if (!this.payment) return "Не выбран вид оплаты";
+    return null;
+  }
+
+  validateEmail(): string | null {
+    if (!this.email) return "Укажите емэйл";
+    return null;
+  }
+
+  validatePhone(): string | null {
+    if (!this.phone) return "Укажите телефон";
+    return null;
+  }
+
+  validateAddress(): string | null {
+    if (!this.address) return "Укажите адрес";
+    return null;
+  }
+}
+
   
    проверка введенных данных
    Получение данных

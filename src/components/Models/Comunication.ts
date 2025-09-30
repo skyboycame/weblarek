@@ -10,9 +10,9 @@ export class Comunication {
     return this.api.get<IProduct[]>('/product');
   }
 
-  async sendOrder(buyer: IBuyer, products: IProduct[]): Promise<void> {
+  async sendOrder(buyer: IBuyer, products: IProduct[]): Promise<{}> {
     const order: IOrder = { buyer, products };
-    await this.api.post<{}>('/order', order, 'POST');
+    return await this.api.post<{}>('/order', order, 'POST');
   }
 
 }
