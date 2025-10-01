@@ -26,3 +26,8 @@ export interface IOrder {
   buyer?: IBuyer;
   products?: IProduct[];
 }
+
+export interface Iprom {
+   id: string,
+   total: number
+}
