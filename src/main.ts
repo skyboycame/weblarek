@@ -7,20 +7,61 @@ import "./scss/styles.scss";
 import { IBuyer, IProduct } from "./types";
 import { API_URL } from "./utils/constants";
 import { apiProducts } from "./utils/data";
-console.log("VITE_API_ORIGIN:", import.meta.env.VITE_API_ORIGIN);
-console.log(API_URL);
-const productsModel = new Product();
+import { Header } from "./components/View/Header";
+import { EventEmitter } from "./components/base/Events";
+import { CardCatalog } from "./components/View/Card/CardCatalog";
+import { Modal } from "./components/View/Modal";
+import { Basket as BasketView } from "./components/View/Basket";
+import { Gallery } from "./components/View/Gallery";
+import { categoryMap } from "./utils/constants";
+import { CardPreview } from "./components/View/Card/CardPreview";
+import { CardBasket } from "./components/View/Card/CardBasket";
+import { TPayment } from "./types";
+import { OrderForm } from "./components/View/Form/OrderForm";
+import { Contacts } from "./components/View/Form/ContactForm";
+import { SuccessOrder } from "./components/View/SuccessOrder";
 
-productsModel.saveProducts(apiProducts.items);
-console.log(productsModel.getProducts());
+interface ICardSelectEvent {
+  title: string;
+}
+
+interface ISelectedProductEvent {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  category: string;
+  price?: number;
+}
+
+
+const events = new EventEmitter()
+const productsModel = new Product(events);
+const basketModel = new Basket(events)
+const buyerModel = new Buyer(events,{ payment: "", email: "", phone: "", address: "" } )
+
+const catalogContainer = document.querySelector('.gallery') as HTMLElement
+const headerContainer = document.querySelector('.header') as HTMLElement
+const modalContainer = document.querySelector('.modal') as HTMLElement
+const contentModalContainer = document.querySelector('.modal__content') as HTMLElement
+const templateBasket = document.querySelector('#basket') as HTMLTemplateElement;
+const basketContainer = templateBasket.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+const gallery = new Gallery(events, catalogContainer)
+const modal = new Modal(events,modalContainer);
+const header = new Header(events,headerContainer);
+const basketView = new BasketView(events, basketContainer);
+
 
 async function loadProducts() {
   try {
     const apiInstance = new Api(API_URL);
-    const comunication = new Comunication(apiInstance);
+    const comunication = new Comunication(events, apiInstance);
 
-    const products = await comunication.fetchProducts();
-    productsModel.saveProducts(products);
+    const productsResponse = await comunication.fetchProducts();
+    console.log(productsResponse)
+    productsModel.saveProducts(productsResponse.items);
+    
 
     console.log("Полученные продукты:", productsModel.getProducts());
   } catch (error) {
@@ -33,67 +74,185 @@ async function loadProducts() {
 }
 loadProducts();
 
-const buyerData: IBuyer = {
-  payment: "card",
-  email: "test@example.com",
-  phone: "+79998887766",
-  address: "Москва",
-};
 
-const buyer = new Buyer(buyerData);
 
-console.log("Инфо о покупателе:", buyer.getInfoAboutBuyer());
+const templateCard = document.querySelector('#card-catalog') as HTMLTemplateElement;
 
-buyer.savePayment("cash");
-buyer.saveEmail("new@example.com");
-buyer.savePhone("+70000000000");
-buyer.saveAddress("СПб, Невский проспект");
 
-console.log("После обновления:", buyer.getInfoAboutBuyer());
+events.on('products:changed', () => {
+  const products = productsModel.getProducts()
+  console.log(typeof products)
 
-console.log("Валидация payment:", buyer.validatePayment());
-console.log("Валидация email:", buyer.validateEmail());
-console.log("Валидация phone:", buyer.validatePhone());
-console.log("Валидация address:", buyer.validateAddress());
 
-buyer.deleteBuyerInfo();
-console.log("После удаления данных:", buyer.getInfoAboutBuyer());
+  const cards = products.map((product: IProduct) => {
+    const cardElement = templateCard.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const card = new CardCatalog(events, cardElement)
 
-const products: IProduct[] = apiProducts.items;
+     const categoryClass = product.category in categoryMap 
+      ? categoryMap[product.category as keyof typeof categoryMap]
+      : 'card__category_other'
 
-const productManager = new Product(products);
+ 
 
-console.log("Все продукты:", productManager.getProducts());
+    card.render({
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      category: product.category,
+      image: product.image,
+      price: product.price!,
+      categoryClass: categoryClass
+    }as any);
+    return cardElement
+  })
 
-const firstId = products[0].id;
-console.log("Один продукт по id:", productManager.getOneProduct(firstId));
+  catalogContainer.innerHTML = ''
+  cards.forEach(card => catalogContainer.appendChild(card))
+})
 
-productManager.saveProductForView(products[1]);
-console.log(
-  "Выбранный продукт для просмотра:",
-  productManager.getProductForView()
-);
 
-const basket = new Basket();
+events.on('card:select', (data: ICardSelectEvent) => {
+  if (!data.title) return; 
 
-console.log("Корзина изначально:", basket.getBasketProducts());
+  const product = productsModel.getProducts().find(p => p.title === data.title);
+  if (!product) return;
 
-basket.addToBasketProducts(products[0]);
-basket.addToBasketProducts(products[1]);
-console.log("После добавления:", basket.getBasketProducts());
+  productsModel.saveProductForView(product as IProduct);
+});
 
-console.log("Есть ли продукт:", basket.hasProduct(products[0].id));
+const templateCardPreview = document.querySelector('#card-preview') as HTMLTemplateElement;
+events.on('selectedProducts:changed', (product: ISelectedProductEvent) => {
+  if (!product) return;
 
-console.log("Количество товаров:", basket.quantityBasketProducts());
-console.log("Сумма корзины:", basket.sumOfBasketProduct());
+  const cardPreviewElement = templateCardPreview.content.firstElementChild!.cloneNode(true) as HTMLElement;
+  const cardPreview = new CardPreview(events, cardPreviewElement);
 
-basket.deleteFromBasketProducts(products[0]);
-console.log("После удаления одного продукта:", basket.getBasketProducts());
+  cardPreview.category = product.category;
+  cardPreview.text = product.description;
+  cardPreview.image = product.image || '';
+  cardPreview.title = product.title;
+  cardPreview.price = product.price || 0;
 
-console.log(
-  "Один товар из корзины:",
-  basket.getOneBasketProduct(products[1].id)
-);
 
-basket.deleteEverythingFromBasket();
-console.log("После очистки:", basket.getBasketProducts());
+  contentModalContainer.innerHTML = '';
+  contentModalContainer.appendChild(cardPreview.render());
+
+  modal.open();
+});
+
+events.on('basket:add', () => {
+  const product = productsModel.getProductForView();
+  if (!product) return;
+
+  if (!basketModel.hasProduct(product.id)) {
+    basketModel.addToBasketProducts(product);
+  }
+});
+  events.on('basket:remove', (data: { title: string }) => {
+    const product = basketModel.getBasketProducts().find(p => p.title === data.title);
+    if (!product) return;
+
+    basketModel.deleteFromBasketProducts(product);
+  });
+
+
+
+events.on('basket:changed', (products: IProduct[]) => {
+  const cardTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
+
+  const basketCards = products.map((product) => {
+    const cardElement = cardTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const card = new CardBasket(events, cardElement);
+
+   
+     card.render({
+      title: product.title,
+      price: product.price!,
+    });
+    return card
+  });
+
+  basketView.items = basketCards; 
+  header.counter = products.length;
+});
+
+events.on('basket:open', () => {
+  basketView.items = basketModel.getBasketProducts().map(product => {
+    const cardTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
+    const cardElement = cardTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const card = new CardBasket(events, cardElement);
+    card.render({ title: product.title, price: product.price! });
+    return card;
+  });
+
+  modal.modalContent = basketView.render({
+    sum: basketModel.sumOfBasketProduct()
+  });
+
+  modal.open();
+});
+
+events.on('modal:close', () => {
+  modal.close();
+});
+
+events.on('address:changed', (event: object) => {
+  const value = event as unknown as string;
+  buyerModel.saveAddress(value);
+});
+
+events.on('phone:changed', (event: object) => {
+  const value = event as unknown as string;
+  buyerModel.savePhone(value);
+});
+
+events.on('email:changed', (event: object) => {
+  const value = event as unknown as string;
+  buyerModel.saveEmail(value);
+});
+
+events.on('payment:changed', (event: object) => {
+  const value = event as unknown as TPayment;
+  buyerModel.savePayment(value);
+});
+
+events.on('basket:order', () => {
+  const products = basketModel.getBasketProducts();
+  if (products.length === 0) {
+    alert('Корзина пуста!');
+    return;
+  }
+
+  const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
+  const orderContainer = orderTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+  const orderForm = new OrderForm(events, orderContainer);
+
+  modal.modalContent = orderForm.render();
+  modal.open();
+});
+
+
+events.on('order:contact', () => {
+
+  const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
+  const contactsContainer = contactsTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+  const contactsForm = new Contacts(events, contactsContainer);
+
+  modal.modalContent = contactsForm.render();
+  modal.open();
+});
+
+events.on('contact:success', () => {
+  const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
+  const successContainer = successTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+  const successOrder = new SuccessOrder(events, successContainer);
+  
+
+  successOrder.CountDescOrderSuccess = basketModel.sumOfBasketProduct();
+  
+
+  modal.modalContent = successOrder.render();
+  modal.open();
+});

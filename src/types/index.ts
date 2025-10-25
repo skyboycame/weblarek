@@ -15,6 +15,7 @@ export interface IProduct {
   category: string;
   price: number | null;
 }
+
 export interface IBuyer {
   payment: TPayment;
   email: string;

@@ -324,3 +324,278 @@ total: number  (общая стоимость)
 class Communication extends Api {
 	Этот класс будет использовать композицию, чтобы выполнить запрос на сервер с помощью метода get класса Api и будет получать с сервера объект с массивом товаров.
 }
+
+##### VIEW
+
+Блоки которые отображаются в модальном окне:
+1) Описание товара
+2) Корзина
+3)  форма с видом оплаты
+4)  форма емейл телефон
+5) Заказ оформлен
+6) Модальное окно
+
+Части, блоки:
+Корзина с счетчиком товаров
+Список карточек товара
+	Карточка
+Корзина 
+	Карточка товаров в корзине
+
+
+Переиспользуемые сущности:
+Информация о товаре используется в :
+1) Карточке товара
+2) В корзине, когда товар добавлен
+3) В модальном окне, когда выбираешь определенную карточку
+
+ формы
+
+
+Поиск элементов в классе не должен осуществляться через document, а через родительский контейнер
+
+За каждый блок будет отвечать отдельный класс(в ts). Например за весь header будет отвечать один class :
+
+Отдельные классы для:
+В нем нужно найти те элементы, которые меняются , а также с которыми взаимодействует пользователь:
+	interface HeaderData {
+	counter: number
+	}
+
+1) class Header extends Component <HeaderData>{
+
+
+	Я так понимаю, что эти элементы нужно будет найти в constuctor
+	basketButton : htmlButtonElement
+	private counter: htmlElement
+	 }
+
+	(Наверное так)
+	set counter(value: number){
+		this.counter = value
+		}
+
+
+
+
+
+interface GalleryData {
+catalog: HTMLElement[]
+} 
+
+2) Каталог с карточками товара
+   class Gallery extends Component <GalleryData> {
+
+
+	main: htmlElement
+	нужен будет метод который передает в main карточки
+	для этого понадобится set Catalog(items: HTMLElement[]) {
+		this.catalog  = [items]  (НАВЕРНОЕ)
+	}
+}
+
+3) Модальное окно - просто оболочка без содержимого, в нее нужно будет вставлять template - шаблоны (Вспомнить как пользоваться шаблонами)
+
+interface ModalData {
+	modalContent: HTMLElement
+}
+class Modal extends Component <ModalData> {
+	modalClose : HTMLButtonElement
+	modalContent: htmlElement
+
+set modalContent (element: HTMLElement) я так понимаю нужно будет сюда вставлять template
+}
+
+
+4)  Успешно выполненный ордер
+
+interface SuccessOrderData {
+	descOrderSuccess: string
+}
+
+class SuccessOrder extends Component<SuccessOrderData> {
+
+		descOrderSuccess: string
+		buttonOrderSucces: HTMLButtonElement
+
+set descOrderSuccess(value:  string) {
+	сеттер должен передавать общую сумму заказа
+}
+}
+
+5) Отдельная Карточка в каталоге на главной странице
+
+
+	Interface CardCatalogData {
+		cardCategory: string 
+		cardTitle: string
+		cardPrice: string
+	}
+
+   class CardCatalog extends CardParent<CardCatalogData> {
+
+	buttonCard: HTMLButtonElement
+	cardCategory: string 
+	cardTitle: string
+	cardImage: HTMLImageElement
+	cardPrice: string
+	
+set CardCategory(value: string) 
+set cardTitle(value: string)
+set cardPrice(value: string)
+
+Так понял, что img уже готовым методом
+}
+
+
+6) Карточка которая открывается в модальном окне
+
+interface fullCardData {
+	cardCategory: string 
+	cardTitle: string
+	cardPrice: string
+	cardText: string
+}
+
+class fullCard extends CardParent <fullCardData> {
+	cardCategory: string 
+	cardTitle: string
+	cardImage: HTMLImageElement
+	cardPrice: string
+	cardText: string
+	cardBasketButton: HTMLButtonElement
+
+Так понял, что img уже готовым методом
+set CardCategory(value: string) 
+set cardTitle(value: string)
+set cardPrice(value: string)
+set cardText(value:string)
+}
+
+7) Элемент списка добавленных товаров в корзину (вставляется в basket__list , а уже он в свою очередь в модальное окно)
+
+interface BasketItemData {
+	cardTitle: string
+	cardPrice: string
+}
+
+class BasketItem extends CardParent <BasketItemData> {
+
+	basketItemIndex : number,
+	cardTitle: string
+	cardPrice: string
+	buttonBasketDelete: HTMLButtonElement
+
+
+set cardTitle(value: string)
+set cardPrice(value: string)
+}
+
+
+8) Корзина, которая вставляется в модалку
+
+interface BasketData {
+	basketList: HTMLUListElement
+	basketPrice: string
+}
+
+class Basket extends Component <BasketData> {
+
+	basketList: HTMLUListElement
+	basketButton: HTMLButtonElement
+	basketPrice: string
+
+setBasketList(items: BasketItem (ПО ИДЕЕ))
+setBasketPrice(value:string)
+}
+
+9) Ордер (вставляется в модалку)
+
+Interface OrderData {
+inputAddress : HTMLInputElement
+}
+
+class Order extends FormParent <OrderData> {
+
+	buttonPayCard: HTMLButtonElement
+	buttonPayCash: HTMLButtonElement
+	inputAddress : HTMLInputElement
+	buttonNextStap: HTMLButtonElement
+
+	set inputAddress(value:string)
+}
+
+
+10) Контакты (вставляется в модалку)
+
+interface ContactsData {
+	emailInput : HTMLInputElement
+	numberInput : HTMLInputElement
+}
+
+class Contacts extends FormParent <ContactsData> {
+
+	emailInput : HTMLInputElement
+	numberInput : HTMLInputElement
+	buttonNextStap: HTMLButtonElement
+
+
+	set emailInput(value: string)
+	set number(value: string)
+}
+
+
+Сделаем общего родителя форм (наверное так)
+
+class FormParent extends Component {
+	buttonNextStap: HTMLButtonElement
+	emailInput? : HTMLInputElement
+	numberInput? : HTMLInputElement		
+	buttonPayCard?: HTMLButtonElement
+	buttonPayCash?: HTMLButtonElement
+	inputAddress? : HTMLInputElement
+}
+
+Общий родитель карточек 
+
+
+class CardParent extends Component {
+ я думаю сделать так что общие ключи сделать обязательными
+ а которые где-то есть где-то нет сделать необязательными
+	cardTitle: string
+	cardPrice: string
+	cardCategory?: string 
+	cardImage?: HTMLImageElement
+	cardText?: string
+
+set cardTitle(value: string)
+set cardPrice(value: string)
+		
+}
+
+
+
+##### События 
+
+modal:close - закрытие модалки 
+basket:open - открытие корзины
+card:select - выбор карточки
+basket:order - в модалке из корзины в ордер
+order:contact - в модалке из ордера в контакты
+contact:success - в модалке из контактов в саксес
+basket:add 
+basket:remove
+address:changed - при смене адреса
+phone:changed -при смене телефона
+email:changed
+payment:changed
+buyer:changed - при смене всей информации о покупателе
+products:fetched - загрузка всех продуктов
+order:sent - отправка заказа на сервер
+selectedProducts:changed - выбраный товар 
+products:changed - сохраняет продукты которые пришли с сервера
+
+
+###### Presenter 
+
+Реализовывать буду в main.ts
