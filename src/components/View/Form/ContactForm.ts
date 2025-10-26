@@ -11,24 +11,31 @@ interface IContactsData {
 export class Contacts extends FormParent<IContactsData> {
 
 
-  constructor(events: IEvents, container: HTMLElement) {
+ constructor(events: IEvents, container: HTMLElement) {
+  super(events, container, '.button');
 
+  this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container);
+  this.numberInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container);
 
-    super(events, container)
-    this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container)
-    this.numberInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container)
-
-    if(this.emailInput.value || this.numberInput.value) {
-      this.enableNextStep()
-    }
-
-      this.buttonNextStep.addEventListener('click', () => {
-      this.events.emit('contact:success')
-    })
-
-    this.emailInput.addEventListener('input', () => this.checkNextStep());
-    this.numberInput.addEventListener('input', () => this.checkNextStep());
+  if (this.emailInput.value || this.numberInput.value) {
+    this.enableNextStep();
   }
+
+  this.buttonNextStep.addEventListener('click', (e) => {
+    e.preventDefault(); 
+
+    const formData = {
+      email: this.emailInput!.value.trim(),
+      phone: this.numberInput!.value.trim()
+    };
+    
+    
+    this.events.emit('contact:success', formData);
+  });
+
+  this.emailInput.addEventListener('input', () => this.checkNextStep());
+  this.numberInput.addEventListener('input', () => this.checkNextStep());
+}
 
   protected checkNextStep() {
   if (this.emailInput?.value.trim() !== '' && this.numberInput?.value.trim() !== '') {

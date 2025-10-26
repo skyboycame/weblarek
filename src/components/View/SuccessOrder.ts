@@ -22,7 +22,7 @@ export class SuccessOrder extends Component<ISuccessOrder> {
     })
   }
 
-  set CountDescOrderSuccess(value: number) {
+  set countDescOrderSuccess(value: number) {
     this.descOrderSuccess.textContent = `Списано ${value} синапсов`
   }
 }

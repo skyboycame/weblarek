@@ -7,12 +7,14 @@ import { categoryMap } from "../../../utils/constants";
 interface ICardCatalog extends ICardParent {
   category: string;
   image?: string;
+  
 }
 
 export class CardCatalog extends CardParent<ICardCatalog> {
   protected buttonCard: HTMLButtonElement;
   protected cardCategory: HTMLElement;
   protected cardImage: HTMLImageElement;
+  protected id!: string;
 
   constructor(protected events: IEvents, container: HTMLElement) {
     super(events, container);
@@ -28,9 +30,9 @@ export class CardCatalog extends CardParent<ICardCatalog> {
     );
 
     this.buttonCard.addEventListener("click", () => {
-      this.events.emit("card:select", {
-        title: this.cardTitle.textContent ?? "",
-      });
+      if (this.id) {
+        this.events.emit("card:select", { id: this.id });
+      }
     });
   }
 
@@ -51,6 +53,7 @@ export class CardCatalog extends CardParent<ICardCatalog> {
   }
 
   render(data: ICardCatalog): HTMLElement {
+    if (data.id) this.id = data.id;
     if (data.title) this.title = data.title;
     if (data.price) this.price = data.price;
     if (data.category) this.category = data.category;

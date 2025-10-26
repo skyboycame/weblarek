@@ -69,4 +69,11 @@ export class Buyer {
     if (!this.address) return "Укажите адрес";
     return null;
   }
+
+  clear() {
+    this.payment = "";
+    this.address = "";
+    this.email = "";
+    this.phone = "";
+  }
 }

@@ -27,6 +27,11 @@ export class Basket {
     this.events.emit('basket:changed', this.productsBasket)
   }
 
+  deleteFromBasketProductsById(id: string) {
+  this.productsBasket = this.productsBasket.filter(p => p.id !== id);
+  this.events.emit('basket:changed', this.productsBasket);
+}
+
   deleteEverythingFromBasket(): void {
     this.productsBasket.length = 0
     this.events.emit('basket:changed', this.productsBasket)

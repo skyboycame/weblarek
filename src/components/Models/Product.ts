@@ -37,4 +37,19 @@ export class Product {
   getProductForView(): IProduct | null {
     return this.selectedProduct;
   }
+
+
+  getProductById(id: string): IProduct | undefined {
+  return this.products.find(p => p.id === id);
+}
+
+selectProductById(id: string): void {
+  const product = this.getProductById(id);
+  if (product) {
+    this.saveProductForView(product);
+    this.events.emit("selectedProducts:changed", product)
+  }
+}
+
+
 }

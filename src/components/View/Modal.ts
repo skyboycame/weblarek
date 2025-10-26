@@ -38,6 +38,11 @@ open() {
     this.container.classList.add('modal_active')
   }
 
+    setContent(content: HTMLElement) {
+    this.modalContainer.innerHTML = '';
+    this.modalContainer.appendChild(content);
+  }
+
   close() {
   this.container.classList.remove('modal_active')
 }

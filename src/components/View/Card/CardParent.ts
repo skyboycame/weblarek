@@ -6,6 +6,7 @@ import { IEvents } from "../../base/Events";
 export interface ICardParent {
   title: string,
   price: number
+  id: string
 }
 
 export class CardParent<T extends ICardParent> extends Component<T> {

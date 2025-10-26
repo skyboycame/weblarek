@@ -11,9 +11,9 @@ export abstract class FormParent<T> extends Component<T> {
   protected buttonPayCard?: HTMLButtonElement
   protected buttonPayCash?: HTMLButtonElement
 
-  constructor(protected events: IEvents, container: HTMLElement) {
+  constructor(protected events: IEvents, container: HTMLElement, nextStepSelector: string) {
     super(container)
-    this.buttonNextStep = ensureElement<HTMLButtonElement>('.order__button, .button', this.container)
+    this.buttonNextStep = ensureElement<HTMLButtonElement>(nextStepSelector, this.container)
   }
 
   protected enableNextStep() {

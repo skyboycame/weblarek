@@ -14,7 +14,14 @@ export class Comunication {
   }
 
   async sendOrder(buyer: IBuyer, products: IProduct[]): Promise<Iprom> {
-    const order: IOrder = { buyer, products };
+   const order = {
+        payment: buyer.payment,
+        address: buyer.address,
+        email: buyer.email,
+        phone: buyer.phone,
+        items: products.map(p => p.id), 
+        total: products.reduce((sum, p) => sum + (p.price ?? 0), 0),
+    };
     const response = await this.api.post<Iprom>('/order', order, 'POST');
     this.events.emit('order:sent', response); 
     return response;

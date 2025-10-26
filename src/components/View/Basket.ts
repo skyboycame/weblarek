@@ -32,11 +32,7 @@ export class Basket extends Component<IBasket> {
 
     this.basketList.replaceChildren(...cards.map(card => card.render()))
 
-    cards.forEach((card, i) => card.index = i + 1)
 
-    const total = cards.reduce((acc,card) => acc + card.priceValue,0)
-
-    this.sum = total
   }
 
 
